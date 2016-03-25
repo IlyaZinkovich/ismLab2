@@ -7,8 +7,6 @@ import org.apache.commons.math3.distribution.UniformIntegerDistribution;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.junit.Test;
 
-import java.util.Arrays;
-
 import static java.lang.Math.pow;
 import static org.junit.Assert.assertTrue;
 
@@ -55,45 +53,30 @@ public class BinaryMatrixRankTest {
 
 
     private void binaryMatrixRank(int[] bin_data) {
-        int size = 32;
-        int n = bin_data.length;
-        int block_size = size * size;
-        int num_m = (int) Math.floor(n / (size * size));
-        int block_start = 0;
-        int block_end = block_size;
-        double[][] m = new double[128][128];
-        double[] max_ranks = new double[]{0, 0, 0};
-        for (int im = 0; im < num_m; im++) {
-            int[] block_data = Arrays.copyOfRange(bin_data, block_start, block_end);
-            double[] block = new double[block_data.length];
-            for (int i = 0; i < block_data.length; i++) {
-                if (block_data[i] == 1) {
-                    block[i] = 1.0;
+        int M = 32, Q = 32;
+        int n = 10000;
+        int num_m = n / (M * Q);
+        double piks[] = {0.2888, 0.5776, 0.1336};
+        double[] max_ranks = {0, 0, 0};
+
+        for (int i = 0; i < num_m; i++) {
+            int[][] matrix = new int[M][];
+            for (int j = 0; j < M; j++) {
+                matrix[j] = new int[Q];
+                for (int k = 0; k < Q; k++) {
+                    matrix[j][k] = bin_data[i * M * Q + j * M + k];
                 }
             }
-            m = shape(block, size);
-            BinaryMatrix ranker = new BinaryMatrix(m, size, size);
-            int rank = ranker.compute_rank();
-            if (rank == size) {
-                max_ranks[0] += 1;
+            int rank = computeRank(M, Q, matrix);
+            if (rank == M) {
+                max_ranks[0]++;
+            } else if (rank == M - 1) {
+                max_ranks[1]++;
+            } else {
+                max_ranks[2]++;
             }
-            else if (rank == (size - 1)) {
-                max_ranks[1] += 1;
-            }
-            else {
-                max_ranks[2] += 1;
-            }
-            block_start += block_size;
-            block_end += block_size;
-
-
         }
-        double[] piks = new double[]{1.0, 0.0, 0.0};
-        for (int x = 1; x < 50; x++) {
-            piks[0] *= 1 - (1.0 / (Math.pow(2, x)));
-            piks[1] = 2 * piks[0];
-            piks[2] = 1 - piks[0] - piks[1];
-        }
+
         double chi = 0.0;
         for (int i = 0; i < piks.length; i++) {
             chi += pow((max_ranks[i] - piks[i] * num_m), 2.0) / (piks[i] * num_m);
@@ -106,15 +89,108 @@ public class BinaryMatrixRankTest {
         assertTrue(p >= 0.01);
     }
 
-    public static double[][] shape(double[] arr, int size) {
-        double[][] matrix = new double[size][size];
-        int counter = 0;
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                matrix[i][j] = arr[counter++];
+    private static int computeRank(int M, int Q, int[][] matrix) {
+        int i, rank, m = Math.min(M, Q);
+        for (i = 0; i < m - 1; i++) {
+            if (matrix[i][i] == 1) {
+                perform_elementary_row_operations(0, i, M, Q, matrix);
+            } else {
+                if (find_unit_element_and_swap(0, i, M, Q, matrix) == 1) {
+                    perform_elementary_row_operations(0, i, M, Q, matrix);
+                }
             }
         }
-        return matrix;
+
+        for (i = m - 1; i > 0; i--) {
+            if (matrix[i][i] == 1) {
+                perform_elementary_row_operations(1, i, M, Q, matrix);
+            } else {
+                if (find_unit_element_and_swap(1, i, M, Q, matrix) == 1) {
+                    perform_elementary_row_operations(1, i, M, Q, matrix);
+                }
+            }
+        }
+
+        rank = determine_rank(m, M, Q, matrix);
+
+        return rank;
+    }
+
+    private static void perform_elementary_row_operations(int flag, int i, int M, int Q, int[][] A) {
+        int j, k;
+
+        if (flag == 0) {
+            for (j = i + 1; j < M; j++) {
+                if (A[j][i] == 1) {
+                    for (k = i; k < Q; k++) {
+                        A[j][k] = (A[j][k] + A[i][k]) % 2;
+                    }
+                }
+            }
+        } else {
+            for (j = i - 1; j >= 0; j--) {
+                if (A[j][i] == 1) {
+                    for (k = 0; k < Q; k++) {
+                        A[j][k] = (A[j][k] + A[i][k]) % 2;
+                    }
+                }
+            }
+        }
+    }
+
+    private static int find_unit_element_and_swap(int flag, int i, int M, int Q, int[][] A) {
+        int index, row_op = 0;
+
+        if (flag == 0) {
+            index = i + 1;
+            while ((index < M) && (A[index][i] == 0)) {
+                index++;
+            }
+            if (index < M) {
+                row_op = swap_rows(i, index, Q, A);
+            }
+        } else {
+            index = i - 1;
+            while ((index >= 0) && (A[index][i] == 0)) {
+                index--;
+            }
+            if (index >= 0) {
+                row_op = swap_rows(i, index, Q, A);
+            }
+        }
+
+        return row_op;
+    }
+
+    private static int swap_rows(int i, int index, int Q, int[][] A) {
+        int p;
+        int temp;
+
+        for (p = 0; p < Q; p++) {
+            temp = A[i][p];
+            A[i][p] = A[index][p];
+            A[index][p] = temp;
+        }
+
+        return 1;
+    }
+
+    private static int determine_rank(int m, int M, int Q, int[][] A) {
+        int i, j, rank, allZeroes;
+        rank = m;
+        for (i = 0; i < M; i++) {
+            allZeroes = 1;
+            for (j = 0; j < Q; j++) {
+                if (A[i][j] == 1) {
+                    allZeroes = 0;
+                    break;
+                }
+            }
+            if (allZeroes == 1) {
+                rank--;
+            }
+        }
+        return rank;
     }
 
 }
