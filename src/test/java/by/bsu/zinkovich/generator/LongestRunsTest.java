@@ -17,28 +17,23 @@ import static ucar.unidata.util.SpecialMathFunction.igamc;
 public class LongestRunsTest {
 
     @Test
-    public void longestRunsExample() {
-        int[] bits = {1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0,
-                0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1,
-                0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0};
-        longestRuns(bits);
-    }
-
-    @Test
     public void longestRunsLFSR() {
         LFSRGenerator lfsrGenerator = new LFSRGenerator(32, 31, 30, 28, 26, 1);
+        System.out.println("LFSR:");
         longestRuns(lfsrGenerator.nextBit(10000));
     }
 
     @Test
     public void longestRunsFirstLinearCongruential() {
         RandomGenerator generator = new LinearCongruentialGenerator(4, 7, 3, 11);
+        System.out.println("FirstLinearCongruential:");
         longestRuns(new UniformIntegerDistribution(generator, 0, 1).sample(10000));
     }
 
     @Test
     public void longestRunsSecondLinearCongruential() {
         RandomGenerator generator = new LinearCongruentialGenerator();
+        System.out.println("SecondLinearCongruential:");
         longestRuns(new UniformIntegerDistribution(generator, 0, 1).sample(10000));
     }
 
@@ -47,6 +42,7 @@ public class LongestRunsTest {
         RandomGenerator first = new LinearCongruentialGenerator(4, 7, 3, 11);
         RandomGenerator second = new LinearCongruentialGenerator();
         RandomGenerator generator = new MacLarenMarsagliaGenerator(first, second, 10);
+        System.out.println("FirstMaclarenMarsaglia:");
         longestRuns(new UniformIntegerDistribution(generator, 0, 1).sample(10000));
     }
 
@@ -55,7 +51,14 @@ public class LongestRunsTest {
         RandomGenerator first = new LinearCongruentialGenerator(4, 7, 3, 11);
         RandomGenerator second = new LinearCongruentialGenerator();
         RandomGenerator generator = new MacLarenMarsagliaGenerator(second, first, 10);
+        System.out.println("SecondMaclarenMarsaglia:");
         longestRuns(new UniformIntegerDistribution(generator, 0, 1).sample(10000));
+    }
+
+    @Test
+    public void longestRunsE() {
+        System.out.println("E:");
+        longestRuns(Exponent.INSTANCE.getBits());
     }
 
 

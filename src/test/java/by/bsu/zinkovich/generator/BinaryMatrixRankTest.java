@@ -15,28 +15,23 @@ import static org.junit.Assert.assertTrue;
 public class BinaryMatrixRankTest {
 
     @Test
-    public void binaryMatrixRankExample() {
-        int[] bits = {1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0,
-                0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1,
-                0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0};
-        binaryMatrixRank(bits);
-    }
-
-    @Test
     public void binaryMatrixRankLFSR() {
         LFSRGenerator lfsrGenerator = new LFSRGenerator(32, 31, 30, 28, 26, 1);
+        System.out.println("LFSR:");
         binaryMatrixRank(lfsrGenerator.nextBit(10000));
     }
 
     @Test
     public void binaryMatrixRankFirstLinearCongruential() {
         RandomGenerator generator = new LinearCongruentialGenerator(4, 7, 3, 11);
+        System.out.println("FirstLinearCongruential:");
         binaryMatrixRank(new UniformIntegerDistribution(generator, 0, 1).sample(10000));
     }
 
     @Test
     public void binaryMatrixRankSecondLinearCongruential() {
         RandomGenerator generator = new LinearCongruentialGenerator();
+        System.out.println("SecondLinearCongruential:");
         binaryMatrixRank(new UniformIntegerDistribution(generator, 0, 1).sample(10000));
     }
 
@@ -45,6 +40,7 @@ public class BinaryMatrixRankTest {
         RandomGenerator first = new LinearCongruentialGenerator(4, 7, 3, 11);
         RandomGenerator second = new LinearCongruentialGenerator();
         RandomGenerator generator = new MacLarenMarsagliaGenerator(first, second, 10);
+        System.out.println("FirstMaclarenMarsaglia:");
         binaryMatrixRank(new UniformIntegerDistribution(generator, 0, 1).sample(10000));
     }
 
@@ -53,6 +49,7 @@ public class BinaryMatrixRankTest {
         RandomGenerator first = new LinearCongruentialGenerator(4, 7, 3, 11);
         RandomGenerator second = new LinearCongruentialGenerator();
         RandomGenerator generator = new MacLarenMarsagliaGenerator(second, first, 10);
+        System.out.println("SecondMaclarenMarsaglia:");
         binaryMatrixRank(new UniformIntegerDistribution(generator, 0, 1).sample(10000));
     }
 

@@ -4,7 +4,7 @@ import by.bsu.zinkovich.generator.BinaryGenerator;
 
 public class SelfShrinkingGenerator implements BinaryGenerator {
 
-    private BinaryGenerator binaryGenerator = new LFSRGenerator(32, 31, 30, 28, 26, 1);
+    private BinaryGenerator binaryGenerator = new LFSRGenerator(32, 22, 2, 1);
 
     @Override
     public int nextBit() {
